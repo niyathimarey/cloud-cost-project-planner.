@@ -1,1 +1,640 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Cloud Cost & Project Resource Planner</title>
+
+<style>
+:root {
+  --navy: #172b4d;
+  --blue: #2457a7;
+  --background: #f3f6fb;
+  --border: #dce4ef;
+  --muted: #61718a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  color: #19273b;
+  background: var(--background);
+}
+
+header {
+  background: var(--navy);
+  color: white;
+  padding: 28px 5%;
+}
+
+header h1 {
+  margin: 0 0 8px;
+}
+
+header p {
+  color: #dce7f8;
+  line-height: 1.6;
+}
+
+main {
+  max-width: 1100px;
+  margin: auto;
+  padding: 24px 18px 50px;
+}
+
+section {
+  background: white;
+  padding: 20px;
+  margin-bottom: 18px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+h2 {
+  font-size: 20px;
+  margin-top: 0;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.notice {
+  background: #eaf1fc;
+  padding: 14px;
+  border-radius: 8px;
+  line-height: 1.6;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+}
+
+.metric {
+  padding: 17px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  min-width: 0;
+}
+
+.metric .value {
+  font-size: 26px;
+  font-weight: bold;
+  margin-top: 10px;
+  overflow-wrap: anywhere;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+label {
+  display: block;
+  font-weight: bold;
+  font-size: 14px;
+  margin: 12px 0 6px;
+}
+
+input, select, textarea {
+  display: block;
+  width: 100%;
+  padding: 11px;
+  border: 1px solid #c8d3e2;
+  border-radius: 7px;
+  font: inherit;
+  background: white;
+  color: #19273b;
+}
+
+.service-row {
+  display: grid;
+  grid-template-columns: 1fr 150px;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.service-row label {
+  margin: 0;
+}
+
+button {
+  background: var(--blue);
+  color: white;
+  border: none;
+  border-radius: 7px;
+  padding: 11px 15px;
+  cursor: pointer;
+  margin: 8px 6px 0 0;
+  font-weight: bold;
+}
+
+button:hover {
+  opacity: 0.88;
+}
+
+button.secondary {
+  background: #e8eef7;
+  color: var(--navy);
+}
+
+.result-box {
+  background: #f5f8fc;
+  padding: 14px;
+  margin-top: 14px;
+  border-radius: 8px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+th, td {
+  padding: 12px 8px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  background: #f4f7fb;
+}
+
+footer {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.7;
+  padding: 15px 0;
+}
+
+@media (max-width: 500px) {
+  main { padding-left: 10px; padding-right: 10px; }
+  section { padding: 14px; }
+  header { padding: 22px 15px; }
+  header h1 { font-size: 24px; }
+  .service-row { grid-template-columns: 1fr 100px; gap: 8px; }
+  th, td { font-size: 12px; padding: 8px 4px; }
+}
+
+@media print {
+  body { background: white; }
+  header { background: white; color: black; padding: 15px 0; }
+  header p { color: #333; }
+  main { padding: 10px 0; }
+  section { break-inside: avoid; }
+  button { display: none; }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>Cloud Cost & Project Resource Planner</h1>
+  <p>Estimate cloud expenses, compare architectures, manage budgets,
+  and make informed project decisions.</p>
+</header>
+
+<main>
+
+  <div class="notice">
+    <strong>Demo mode:</strong> Initial values are illustrative estimates.
+    Replace them with your own estimates from the AWS Pricing Calculator.
+    This version does not retrieve live AWS billing information.
+  </div>
+
+  <section>
+    <h2>1. Project Details</h2>
+
+    <div class="form-grid">
+      <div>
+        <label for="projectName">Project Name</label>
+        <input id="projectName" value="Startup Website Project">
+      </div>
+
+      <div>
+        <label for="budget">Monthly Budget (USD)</label>
+        <input id="budget" type="number" min="0" step="0.01" value="60">
+      </div>
+
+      <div>
+        <label for="duration">Project Duration (Months)</label>
+        <input id="duration" type="number" min="1" step="1" value="6">
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>2. Monthly Cloud Cost Estimates</h2>
+
+    <p class="muted">
+      Enter the estimated monthly expense for each service.
+      Use the AWS Pricing Calculator for realistic estimates.
+    </p>
+
+    <div id="serviceInputs"></div>
+
+    <button type="button" id="calculateButton">
+      Calculate Project Budget
+    </button>
+
+    <button type="button" class="secondary" id="resetButton">
+      Reset Sample Costs
+    </button>
+  </section>
+
+  <section>
+    <h2>3. Budget Dashboard</h2>
+
+    <div class="grid">
+      <div class="metric">
+        <div class="muted">Monthly Estimated Cost</div>
+        <div class="value" id="monthlyCost">$0.00</div>
+      </div>
+
+      <div class="metric">
+        <div class="muted">Total Project Cost</div>
+        <div class="value" id="totalCost">$0.00</div>
+      </div>
+
+      <div class="metric">
+        <div class="muted">Budget Remaining</div>
+        <div class="value" id="remainingBudget">$0.00</div>
+      </div>
+
+      <div class="metric">
+        <div class="muted">Budget Utilization</div>
+        <div class="value" id="utilization">0%</div>
+      </div>
+    </div>
+
+    <div class="result-box">
+      <strong>Budget Status:</strong>
+      <span id="budgetStatus">Waiting for calculation</span>
+      <p id="recommendation"></p>
+    </div>
+  </section>
+
+  <section>
+    <h2>4. Architecture Comparison</h2>
+
+    <p class="muted">
+      Enter monthly estimates for two possible cloud architectures.
+    </p>
+
+    <div class="form-grid">
+      <div>
+        <label for="optionA">Option A: Serverless Architecture (USD)</label>
+        <input id="optionA" type="number" min="0" step="0.01" value="30">
+      </div>
+
+      <div>
+        <label for="optionB">Option B: Server-Based Architecture (USD)</label>
+        <input id="optionB" type="number" min="0" step="0.01" value="45">
+      </div>
+    </div>
+
+    <button type="button" id="compareButton">Compare Architectures</button>
+
+    <div class="result-box" id="comparisonResult" aria-live="polite">
+      Enter the two architecture estimates and compare them.
+    </div>
+  </section>
+
+  <section>
+    <h2>5. Project Risk Assessment</h2>
+
+    <div class="form-grid">
+      <div>
+        <label for="likelihood">Likelihood of Cost Overrun</label>
+        <select id="likelihood">
+          <option value="1">Low</option>
+          <option value="2" selected>Medium</option>
+          <option value="3">High</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="impact">Impact of Cost Overrun</label>
+        <select id="impact">
+          <option value="1">Low</option>
+          <option value="2" selected>Medium</option>
+          <option value="3">High</option>
+        </select>
+      </div>
+    </div>
+
+    <label for="mitigation">Risk Mitigation Plan</label>
+    <textarea id="mitigation" rows="3">Review cloud usage regularly, set budget alerts, validate cost assumptions, and remove unused resources.</textarea>
+
+    <button type="button" id="riskButton">Assess Project Risk</button>
+
+    <div class="result-box" id="riskResult" aria-live="polite">
+      Select the likelihood and impact to assess project risk.
+    </div>
+  </section>
+
+  <section>
+    <h2>6. Executive Project Report</h2>
+
+    <p class="muted">
+      Generate a summary of your budget, architecture decision,
+      and risk mitigation plan.
+    </p>
+
+    <button type="button" id="reportButton">Generate Report</button>
+    <button type="button" class="secondary" id="printButton">
+      Print / Save as PDF
+    </button>
+
+    <div id="reportResult" class="result-box" aria-live="polite">
+      Your report will appear here.
+    </div>
+  </section>
+
+  <footer>
+    This is a portfolio prototype. Estimates are not official quotations.
+    Actual AWS charges depend on usage, region, service configuration,
+    data transfer, taxes, and current pricing.
+  </footer>
+
+</main>
+
+<script>
+"use strict";
+
+const initialServices = [
+  { name: "Amazon S3", cost: 3 },
+  { name: "AWS Lambda", cost: 5 },
+  { name: "Amazon API Gateway", cost: 7 },
+  { name: "Amazon DynamoDB", cost: 10 },
+  { name: "Other Estimated Services", cost: 5 }
+];
+
+const serviceInputs = document.getElementById("serviceInputs");
+
+initialServices.forEach((service, index) => {
+  const row = document.createElement("div");
+  row.className = "service-row";
+
+  const label = document.createElement("label");
+  label.htmlFor = "service" + index;
+  label.textContent = service.name;
+
+  const input = document.createElement("input");
+  input.id = "service" + index;
+  input.type = "number";
+  input.min = "0";
+  input.step = "0.01";
+  input.value = service.cost;
+  input.setAttribute("aria-label", service.name + " monthly cost");
+
+  row.append(label, input);
+  serviceInputs.appendChild(row);
+});
+
+function numberFrom(id) {
+  const value = document.getElementById(id).value.trim();
+  return value === "" ? NaN : Number(value);
+}
+
+function money(value) {
+  return "$" + value.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
+function getCosts() {
+  return initialServices.map((service, index) =>
+    numberFrom("service" + index)
+  );
+}
+
+function calculate() {
+  const budget = numberFrom("budget");
+  const duration = numberFrom("duration");
+  const costs = getCosts();
+
+  const valid =
+    Number.isFinite(budget) &&
+    budget >= 0 &&
+    Number.isInteger(duration) &&
+    duration >= 1 &&
+    costs.every(cost => Number.isFinite(cost) && cost >= 0);
+
+  if (!valid) {
+    document.getElementById("budgetStatus").textContent = "Invalid inputs";
+    document.getElementById("recommendation").textContent =
+      "Enter non-negative service costs and budget, and a whole-number duration of at least one month.";
+    return null;
+  }
+
+  const monthly = costs.reduce((sum, cost) => sum + cost, 0);
+  const total = monthly * duration;
+  const remaining = budget - monthly;
+
+  let utilization = budget === 0
+    ? (monthly === 0 ? 0 : Infinity)
+    : monthly / budget * 100;
+
+  let status;
+  let recommendation;
+
+  if (budget === 0 && monthly === 0) {
+    status = "No budget set";
+    recommendation = "Enter a budget and realistic service estimates.";
+  } else if (remaining < 0) {
+    status = "Over Budget";
+    recommendation =
+      "Review expensive services, reduce unnecessary usage, or revise the approved budget.";
+  } else if (utilization >= 80) {
+    status = "High Budget Risk";
+    recommendation =
+      "Your estimate uses at least 80% of the budget. Validate assumptions and consider a contingency reserve.";
+  } else {
+    status = "Within Budget";
+    recommendation =
+      "The estimate is within budget. Verify the AWS pricing assumptions and monitor actual spending.";
+  }
+
+  document.getElementById("monthlyCost").textContent = money(monthly);
+  document.getElementById("totalCost").textContent = money(total);
+
+  document.getElementById("remainingBudget").textContent =
+    remaining >= 0 ? money(remaining) : "-" + money(-remaining);
+
+  document.getElementById("utilization").textContent =
+    Number.isFinite(utilization) ? utilization.toFixed(1) + "%" : "Undefined";
+
+  document.getElementById("budgetStatus").textContent = status;
+  document.getElementById("recommendation").textContent = recommendation;
+
+  return {
+    project: document.getElementById("projectName").value.trim() ||
+      "Untitled Project",
+    budget,
+    duration,
+    costs,
+    monthly,
+    total,
+    remaining,
+    utilization,
+    status,
+    recommendation
+  };
+}
+
+function compareArchitectures() {
+  const a = numberFrom("optionA");
+  const b = numberFrom("optionB");
+  const result = document.getElementById("comparisonResult");
+
+  if (!Number.isFinite(a) || a < 0 ||
+      !Number.isFinite(b) || b < 0) {
+    result.textContent =
+      "Please enter valid non-negative costs for both architectures.";
+    return null;
+  }
+
+  if (a === b) {
+    result.textContent =
+      "Both options have the same estimated monthly cost of " +
+      money(a) + ". Compare maintenance, reliability, scaling and security before choosing.";
+    return { a, b, cheaper: "Equal" };
+  }
+
+  const cheaper = a < b ? "Option A: Serverless" :
+    "Option B: Server-Based";
+
+  const difference = Math.abs(a - b);
+  const lower = Math.min(a, b);
+  const percent = lower === 0 ? null : difference / lower * 100;
+
+  result.textContent = cheaper + " has the lower estimated monthly cost by " +
+    money(difference) +
+    (percent === null ? "." : " (" + percent.toFixed(1) +
+      "% relative to the lower estimate).") +
+    " Confirm that both estimates cover comparable resources and workloads.";
+
+  return { a, b, cheaper };
+}
+
+function assessRisk() {
+  const likelihood = Number(document.getElementById("likelihood").value);
+  const impact = Number(document.getElementById("impact").value);
+  const score = likelihood * impact;
+
+  const level = score >= 7 ? "High" :
+    score >= 4 ? "Medium" : "Low";
+
+  document.getElementById("riskResult").textContent =
+    "Risk score: " + score + "/9. Assessment: " + level +
+    ". Document an owner, a mitigation plan, and a review date.";
+  
+  return { score, level };
+}
+
+function generateReport() {
+  const data = calculate();
+  const comparison = compareArchitectures();
+  const risk = assessRisk();
+  const result = document.getElementById("reportResult");
+
+  result.replaceChildren();
+
+  if (!data || !comparison || !risk) {
+    result.textContent = "Correct the inputs before generating the report.";
+    return;
+  }
+
+  const lines = [
+    ["Project", data.project],
+    ["Monthly estimated cost", money(data.monthly)],
+    ["Project duration", data.duration + " months"],
+    ["Total estimated cost", money(data.total)],
+    ["Monthly budget", money(data.budget)],
+    ["Budget status", data.status],
+    ["Architecture comparison", comparison.cheaper],
+    ["Risk assessment", risk.level + " (" + risk.score + "/9)"],
+    ["Mitigation plan", document.getElementById("mitigation").value]
+  ];
+
+  const heading = document.createElement("h3");
+  heading.textContent = "Executive Summary";
+  result.appendChild(heading);
+
+  lines.forEach(([label, value]) => {
+    const paragraph = document.createElement("p");
+    const strong = document.createElement("strong");
+    strong.textContent = label + ": ";
+    paragraph.append(strong, document.createTextNode(value));
+    result.appendChild(paragraph);
+  });
+
+  const note = document.createElement("p");
+  note.className = "muted";
+  note.textContent =
+    "This report uses manually entered estimates and is not a live AWS billing report.";
+  result.appendChild(note);
+}
+
+function resetCosts() {
+  initialServices.forEach((service, index) => {
+    document.getElementById("service" + index).value = service.cost;
+  });
+
+  calculate();
+}
+
+document.getElementById("calculateButton")
+  .addEventListener("click", calculate);
+
+document.getElementById("resetButton")
+  .addEventListener("click", resetCosts);
+
+document.getElementById("compareButton")
+  .addEventListener("click", compareArchitectures);
+
+document.getElementById("riskButton")
+  .addEventListener("click", assessRisk);
+
+document.getElementById("reportButton")
+  .addEventListener("click", generateReport);
+
+document.getElementById("printButton")
+  .addEventListener("click", () => window.print());
+
+["budget", "duration", "projectName"].forEach(id => {
+  document.getElementById(id).addEventListener("input", calculate);
+});
+
+initialServices.forEach((service, index) => {
+  document.getElementById("service" + index)
+    .addEventListener("input", calculate);
+});
+
+calculate();
+compareArchitectures();
+assessRisk();
+</script>
+
+</body>
+</html>
+
