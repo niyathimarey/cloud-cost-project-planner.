@@ -1,4 +1,3 @@
-
 # Cloud Cost & Project Resource Planner
 
 ## Overview
