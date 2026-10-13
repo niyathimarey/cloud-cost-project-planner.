@@ -67,3 +67,10 @@ This version calculates costs in the browser using manually entered estimates. I
 ## Disclaimer
 
 Initial figures are illustrative examples, not official AWS quotations. Actual costs depend on region, usage, configuration, data transfer, taxes, and current pricing.
+## Dashboard Preview
+
+![Cloud Cost Planner Dashboard](screenshots/dashboard.png)
+
+## Live Demo
+
+https://niyathimarey.github.io/cloud-cost-project-planner./
